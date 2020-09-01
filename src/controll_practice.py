@@ -1,28 +1,16 @@
-#!/usr/bin/env python
+#! /usr/bin/env python
 
 import rospy
-from std_msgs.msg import Float32
 from nav_msgs.msg import Odometry
 from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Point, Twist
 from math import atan2, pi
-import numpy as np
-
-pozyx_x=0.0
-pozyx_y=0.0
 
 x = 0.0
 y = 0.0
 theta = 0.0
 
-def callback1(data):
-    global pozyx_x
-    pozyx_x=data.data
-
-def callback2(data):
-    global pozyx_y
-    pozyx_y=data.data
-
+#store the current position of robot
 def newOdom (msg):
     global x
     global y
@@ -77,10 +65,6 @@ def ro_cir():
     global x
     global y
     global flag
-    global i
-
-    dir_count=0
-    neg_flag=0
 
     speed.linear.x = 0.2
     speed.angular.z = 0.4
@@ -88,31 +72,8 @@ def ro_cir():
     while(True):
         pub.publish(speed)      
         r.sleep()
-	
-	a=criterion()
 
-	i=i+1
-	if a>=0:
-	    dir_count=dir_count+1
-	elif a<0:
-	    dir_count=dir_count-1
-	
-	
-
-def criterion():
-    global x
-    global y
-    global flag
-    
-    eqt=pozyx_y-current_loc[1]-(target_loc[1]-current_loc[1])/(target_loc[0]-current_loc[0])*(pozyx_x-current_loc[0])
-
-    return eqt
-
-
-rospy.init_node('listener', anonymous=True)
-
-sub1= rospy.Subscriber('/chatter1', Float32, callback1)
-sub2= rospy.Subscriber('/chatter2', Float32, callback2)
+rospy.init_node ("speed_controller")
 
 sub = rospy.Subscriber("/odometry/filtered", Odometry, newOdom)
 pub = rospy.Publisher("/cmd_vel",Twist, queue_size=1)
@@ -120,32 +81,21 @@ pub = rospy.Publisher("/cmd_vel",Twist, queue_size=1)
 speed = Twist()
 
 #sleeping rate 
-r=rospy.Rate(10) #10hz
+r=rospy.Rate(4)
 
-flag=4
-
-i=1
-
-
+flag=3
+i=0
 tar_angle=pi*51/100 #0.51
+rospy.sleep(3)
 
-#pozyx need some time to set up
-#rospy.sleep(3)
-
-current_loc=[1300,2000]
+current_loc=[0,0]
 target_loc=[4000,4000]
 
 while not rospy.is_shutdown():
-    TOA=np.array([[0,0]])
-    TOA[0][0]=pozyx_x
-    TOA[0][1]=pozyx_y
-    print(TOA)
+#    print(x)
     if flag==0:
         angle(tar_angle)
     elif flag==1:
         drive(7.2)
     elif flag==3:
         ro_cir()
-    elif flag==4:
-        print(TOA)
-
