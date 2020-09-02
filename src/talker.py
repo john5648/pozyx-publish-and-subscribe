@@ -108,10 +108,11 @@ def toafunc(H,r):
 -------------------TOA & Kalman setting-------------------
 '''
 # anchor location setting AP2 AP3 AP4 AP5
-Hnum1=([0,0],[4800,0],[4800,4800],[0,4800])
+#Hnum1=([0,0],[4800,0],[4800,4800],[0,4800])
+Hnum1=([7540,7210],[7540,0],[14140,0],[14140,7580])
 # anchor height
-tag_height=1620-430
-
+#tag_height=1620-430
+tag_height=1970-430
 
 if __name__ == '__main__':
     check_pypozyx_version = True
@@ -128,12 +129,17 @@ if __name__ == '__main__':
     if not remote:
         remote_id = None
     
-    destination_id1 = 0x6739      #AP2
-    destination_id2 = 0x672c      #AP3
-    destination_id3 = 0x6758      #AP4
-    destination_id4 = 0x677d      #AP5
+    # destination_id1 = 0x6739      #AP2
+    # destination_id2 = 0x672c      #AP3
+    # destination_id3 = 0x6758      #AP4
+    # destination_id4 = 0x677d      #AP5
     range_step_mm = 1000
-    
+
+    destination_id1 = 0x6714      #AP9
+    destination_id2 = 0x6758      #AP2
+    destination_id3 = 0x6a32      #AP3
+    destination_id4 = 0x6e6e      #AP4   
+
     ranging_protocol = PozyxConstants.RANGE_PROTOCOL_PRECISION
 
     pozyx = PozyxSerial(serial_port)

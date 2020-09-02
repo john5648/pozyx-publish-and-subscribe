@@ -36,47 +36,27 @@ def angle(rotate_angle):
     pub.publish(speed)
     r.sleep()
 
-def along_line():
-    global flag
-    global target_loc
-    global current_loc    
-    #time_counter lets jackal turn angular.z=0.4 for only 10 times and 20 times with angular.z=0.1
-    # to prevent overshooting
-    time_counter=0
+def along_line(current_loc, target_loc):
+    global flag   
+    #time_counter lets jackal turn angular.z=0.4 for only 10 times 
+    # and 20 times with angular.z=0.1 to prevent overshooting
     speed.angular.z = 0.0
     speed.linear.x = 0.0
     criteriion_dis=sqrt((current_loc[0]-target_loc[0])**2 + (current_loc[1]-target_loc[1])**2)
     while(True):
-        [eqt, remain_dis, drive_dis] = criterion()
-        if eqt>=400 and time_counter<=10:
-            speed.linear.x = 0.3
-            speed.angular.z = -0.4
-            time_counter=time_counter+1
-        elif eqt<-400 and time_counter<=10:
-            speed.linear.x = 0.3
-            speed.angular.z = 0.4  
-            time_counter=time_counter+1   
-        elif eqt>=400 and time_counter>10:
+        [eqt, remain_dis, drive_dis, sign_num] = criterion(current_loc, target_loc)
+        if eqt >= 100:
             speed.linear.x = 0.4
-            speed.angular.z = -0.1
-            time_counter=time_counter+1           
-        elif eqt<-400 and time_counter>10:
+            speed.angular.z = -0.1*sign_num
+        elif eqt < -100:
             speed.linear.x = 0.4
-            speed.angular.z = 0.1  
-            time_counter=time_counter+1  
-        elif eqt >= 0 and eqt<400:
+            speed.angular.z = 0.1*sign_num
+        else:
             speed.linear.x = 0.4
-            speed.angular.z = -0.1
-            time_counter=0
-        elif eqt < 0 and eqt>=-400:
-            speed.linear.x = 0.4
-            speed.angular.z = 0.1
-            time_counter=0
-        time_counter=time_counter%20
-        
+            speed.angular.z = 0.0            
         if remain_dis<200 or drive_dis>=criteriion_dis:
             break
-
+        print(eqt, speed.angular.z, sign_num)
         pub.publish(speed)      
         r.sleep()   
         
@@ -84,20 +64,22 @@ def along_line():
     speed.angular.z = 0.0
     pub.publish(speed)
     r.sleep()  
-    flag=5
+    flag=1
     
-def criterion():
-    global target_loc
-    global current_loc
+def criterion(current_loc, target_loc):
     global pozyx_x
     global pozyx_y
-    linear_eqt=pozyx_y-current_loc[1]-(target_loc[1]-current_loc[1])/(target_loc[0]-current_loc[0])*(pozyx_x-current_loc[0])
+    linear_eqt=pozyx_y-current_loc[1]-(pozyx_x-current_loc[0])*(target_loc[1]-current_loc[1])/(target_loc[0]-current_loc[0])
+
+    if target_loc[0]-current_loc[0]>=0:
+        signed_num=1
+    else:
+        signed_num=-1
 
     remain_dis= sqrt((target_loc[0]-pozyx_x)**2 + (target_loc[1]-pozyx_y)**2)
     drive_dis= sqrt((current_loc[0]-pozyx_x)**2 + (current_loc[1]-pozyx_y)**2)
 
-    return linear_eqt, remain_dis, drive_dis
-
+    return linear_eqt, remain_dis, drive_dis, signed_num
 
 rospy.init_node('listener', anonymous=True)
 sub1= rospy.Subscriber('/chatter1', Float32, callback1)
@@ -109,19 +91,19 @@ speed = Twist()
 #sleeping rate 
 r=rospy.Rate(10) #10hz
 
-flag=3
+flag=1
 #pozyx need some time to set up
-#rospy.sleep(3)
+rospy.sleep(3)
 
-current_loc=[600,600]
-target_loc=[3000,3000]
-
+jackal_loc=np.array([[10100,6100],[12270,2200]])
+#jackal_loc=np.array([[0,2400],[3000,2400]])
+slot=0
 while not rospy.is_shutdown():
 
     if flag==0:
         angle(90)
     elif flag==1:
-        along_line()
+        along_line(jackal_loc[slot], jackal_loc[slot+1])
     elif flag==2:
         print('done')
     elif flag==3:
@@ -137,4 +119,8 @@ while not rospy.is_shutdown():
         speed.linear.x = 0
         pub.publish(speed)
         r.sleep()
+    
+    slot=slot+1
+    if slot>=len(jackal_loc)-1:
+        break
 
