@@ -69,7 +69,11 @@ def along_line(current_loc, target_loc):
 def criterion(current_loc, target_loc):
     global pozyx_x
     global pozyx_y
-    linear_eqt=pozyx_y-current_loc[1]-(pozyx_x-current_loc[0])*(target_loc[1]-current_loc[1])/(target_loc[0]-current_loc[0])
+
+    if target_loc[0]-current_loc[0] != 0:
+        linear_eqt=pozyx_y-current_loc[1]-(pozyx_x-current_loc[0])*(target_loc[1]-current_loc[1])/(target_loc[0]-current_loc[0])
+    else:
+        linear_eqt=pozyx_x-target_loc[0]
 
     if target_loc[0]-current_loc[0]>=0:
         signed_num=1
@@ -95,7 +99,7 @@ flag=1
 #pozyx need some time to set up
 rospy.sleep(3)
 
-jackal_loc=np.array([[10100,6100],[12270,2200]])
+jackal_loc=np.array([[11140,6100],[11140,600]])
 #jackal_loc=np.array([[0,2400],[3000,2400]])
 slot=0
 while not rospy.is_shutdown():
