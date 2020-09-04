@@ -18,8 +18,11 @@ def newNav (msg):
     global y
     global time
 
-    x = msg.latitude
-    y = msg.longitude
+    la=msg.latitude
+    lo=msg.longitude
+    u=utm.from_latlon(la,lo)
+    x = u[0]
+    y = u[1]
     time=msg.header.stamp
 
 def angle(rotate_angle, rot_dir):
@@ -78,26 +81,28 @@ def along_line(current_loc, target_loc):
     flag=1
 
 def criterion(current_loc, target_loc):
-    global pozyx_x
-    global pozyx_y
+    global x
+    global y
 
     if target_loc[0]-current_loc[0] != 0:
-        linear_eqt=pozyx_y-current_loc[1]-(pozyx_x-current_loc[0])*(target_loc[1]-current_loc[1])/(target_loc[0]-current_loc[0])
+        linear_eqt=y-current_loc[1]-(x-current_loc[0])*(target_loc[1]-current_loc[1])/(target_loc[0]-current_loc[0])
     else:
-        linear_eqt=pozyx_x-target_loc[0]
+        linear_eqt=x-target_loc[0]
 
     if target_loc[0]-current_loc[0]>=0:
         signed_num=1
     else:
         signed_num=-1
 
-    remain_dis= sqrt((target_loc[0]-pozyx_x)**2 + (target_loc[1]-pozyx_y)**2)
-    drive_dis= sqrt((current_loc[0]-pozyx_x)**2 + (current_loc[1]-pozyx_y)**2)
+    remain_dis= sqrt((target_loc[0]-x)**2 + (target_loc[1]-y)**2)
+    drive_dis= sqrt((current_loc[0]-x)**2 + (current_loc[1]-y)**2)
 
     return linear_eqt, remain_dis, drive_dis, signed_num
 
 def finding_slope(target_point):
-    base_point=np.array([pozyx_x, pozyx_y])
+    global x
+    global y
+    base_point=np.array([x, y])
     t0 = rospy.Time.now().to_sec()
     while(rospy.Time.now().to_sec()-t0<3):
         speed.linear.x = 0.3
@@ -111,7 +116,7 @@ def finding_slope(target_point):
     pub.publish(speed)
     r.sleep()
 
-    arrived_point=np.array([pozyx_x, pozyx_y])
+    arrived_point=np.array([x, y])
     #print(base_point,arrived_point,target_point)
     #making vectors unit vector
     slope_vector=np.subtract(arrived_point,base_point)
@@ -135,7 +140,7 @@ speed = Twist()
 r=rospy.Rate(10) #10hz
 
 flag=0
-#pozyx need some time to set up
+#need some time to set up
 rospy.sleep(3)
 
 jackal_loc=np.array([[11140,1200]])
