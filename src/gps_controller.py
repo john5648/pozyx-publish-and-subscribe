@@ -68,8 +68,10 @@ def along_line(current_loc, target_loc):
         else:
             speed.linear.x = 0.4
             speed.angular.z = 0.0            
-        if remain_dis<200 or drive_dis>=criteriion_dis:
+        if remain_dis<1 or drive_dis>=criteriion_dis:
             break
+        print(current_loc, target_loc)
+        print(remain_dis,drive_dis, criteriion_dis)
         #print(eqt, speed.angular.z, sign_num)
         pub.publish(speed)      
         r.sleep()   
